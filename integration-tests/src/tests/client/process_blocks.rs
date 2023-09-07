@@ -2658,6 +2658,11 @@ fn test_catchup_gas_price_change() {
         let store = rt.store();
 
         let shard_id = msg.shard_uid.shard_id as ShardId;
+        assert!(rt
+            .get_flat_storage_manager()
+            .unwrap()
+            .remove_flat_storage_for_shard(msg.shard_uid)
+            .unwrap());
         for part_id in 0..msg.num_parts {
             let key = StatePartKey(msg.sync_hash, shard_id, part_id).try_to_vec().unwrap();
             let part = store.get(DBCol::StateParts, &key).unwrap().unwrap();
@@ -3604,13 +3609,12 @@ fn test_catchup_no_sharding_change() {
 /// These tests fail on aarch because the WasmtimeVM::precompile method doesn't populate the cache.
 mod contract_precompilation_tests {
     use super::*;
-    use near_primitives::contract::ContractCode;
     use near_primitives::test_utils::MockEpochInfoProvider;
     use near_primitives::views::ViewApplyState;
     use near_store::{Store, StoreCompiledContractCache, TrieUpdate};
-    use near_vm_runner::get_contract_cache_key;
     use near_vm_runner::internal::VMKind;
     use near_vm_runner::logic::CompiledContractCache;
+    use near_vm_runner::{get_contract_cache_key, ContractCode};
     use node_runtime::state_viewer::TrieViewer;
 
     const EPOCH_LENGTH: u64 = 25;
